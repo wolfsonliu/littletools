@@ -41,13 +41,16 @@ def unicode2str(uni):
 
 
 def chinese2pinyin(char):
-    return unihan['read'].loc[
-        np.logical_and(
-            unihan['read']['Source'] == 'kMandarin',
-            unihan['read']['Character'] == char
-        ),
-        'Read'
-    ].values[0].lower()
+    if char in [x for x in unihan['read']['Character']]:
+        return unihan['read'].loc[
+            np.logical_and(
+                unihan['read']['Source'] == 'kMandarin',
+                unihan['read']['Character'] == char
+            ),
+            'Read'
+        ].values[0].lower()
+    else:
+        return char
 
 
 def pinyinshengmu(pinyin):
