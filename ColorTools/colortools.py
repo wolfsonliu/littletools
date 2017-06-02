@@ -1,3 +1,6 @@
+import matplotlib.pyplot as plt
+import matplotlib.colors as colors
+
 def easycolor(x, n):
     def func(scale):
         return colors.rgb2hex(
