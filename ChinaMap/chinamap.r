@@ -71,10 +71,17 @@ city[['shp']] <- city[['shp']][
 city[['mapping']] <- city[['mapping']][
     !is.na(city[['mapping']]$name),]
 
+city[['center']] <- data_frame(
+    name=city[['shp']]$NAME99,
+    x=city[['shp']]$CENTROID_X,
+    y=city[['shp']]$CENTROID_Y
+)
+
+
 ## -----------------
 ## Example
 ## -----------------
-## example data
+## example province
 province_count <- data_frame(
     province=c(
         '四川省','江苏省', '浙江省', '北京市', '山东省',
@@ -93,14 +100,14 @@ market <- merge(
     by.y = 'province'
 )
 
-figure <- ggplot(
+figureprovince <- ggplot(
     tidy(province[['shp']])
 ) + geom_polygon(
         aes(x = long, y = lat, group = id),
         color = 'gray95',
         fill  = 'gray85'
     ) + geom_map(
-            aes(map_id= ids, fill = species),
+            aes(map_id= ids, fill = count),
             data = market,
             map = tidy(city[['shp']])
         ) + scale_fill_gradient(
@@ -110,6 +117,38 @@ figure <- ggplot(
                     city[['shp']]
                 ) + coord_map() + theme_void()
 
-ggsave('chinamapexample.pdf', plot=figure, family='GB1')
+## -----------------
+## example city
+
+city_count <- data_frame(
+    city=c(
+      "三门峡市市辖区", "丹东市市辖区", "兰州市市辖区", "包头市市辖区",
+      "北京市市辖区", "呼和浩特市市辖区", "咸阳市市辖区", "哈尔滨市市辖区",
+      "固镇县", "大同市市辖区"
+    ),
+    count=seq(10)
+)
+city_market <- merge(
+    city_count,
+    city[['center']],
+    by.x='city',
+    by.y='name'
+)
+city_market <- city_market[!duplicated(city_market$city),]
+
+figurecity <- ggplot(
+    tidy(province[['shp']])
+) + geom_polygon(
+        aes(x=long, y=lat, group=id),
+        color='gray95',
+        fill='gray85'
+    ) + geom_point(
+            aes(x=x, y=y, size=count, color=city, fill=city),
+            data=city_market
+        ) + expand_limits(
+                city[['shp']]
+            ) + coord_map() + theme_void()
+
+
 
 ####################
