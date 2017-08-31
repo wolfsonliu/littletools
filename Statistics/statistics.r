@@ -30,26 +30,42 @@ colVars <- function(x, na.rm=FALSE) {
     return(cvar)
 }
 
-leverage <- function(data) {
+leverage <- function(x, ...) {
+    UseMethod('leverge', x)
+}
+
+leverage.default <- function(x, na.rm=FALSE, with.attr, ...) {
     ## calculate the laverage statistic
-    then <- length(data)
-    thess <- var(data) * (then - 1)
-    if (thess == 0) {
-        return(rep(1/n, n))
-    } else {}
-    themean <- mean(data)
-    l <- unlist(
-        lapply(
-            data,
-            function(x) { 1 / then + (x - themean)^2 / thess}
+    if (na.rm) x <- x[!is.na(x)]
+
+    ## length of data
+    n <- length(x)
+
+    ## sum of square sum((x - mean(x)) ^ 2)
+    ss <- var(x) * (n - 1)
+
+    if (ss == 0) {
+        l <- rep(1/n, n)
+        m <- 1/n
+        v <- 0
+    } else {
+        m <- mean(x, na.rm=na.rm, ...)
+        v <- var(x, na.rm=na.rm, ...)
+        l <- unlist(
+            lapply(
+                x,
+                function(xi) { 1 / n + (xi - m)^2 / ss}
+            )
         )
-    )
-    result <- list(
-        leverage=l,
-        mean=mean(l),
-        var=var(l)
-    )
-    return(result)
+    }
+
+    if (with.attr) {
+        attr(l, 'mean') <- m
+        attr(l, 'var') <- v
+        attr(l, 'n') <- n
+    } else {}
+
+    return(l)
 }
 
 
