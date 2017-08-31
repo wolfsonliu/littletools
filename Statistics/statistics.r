@@ -1,3 +1,5 @@
+## Vars
+
 rowVars <- function(x, na.rm=FALSE) {
     ## calculate row variance
     if (na.rm) {
@@ -6,11 +8,11 @@ rowVars <- function(x, na.rm=FALSE) {
         nx <- dim(x)[2]
     }
     rmean <- rowMeans(x, na.rm)
-    sumsquare <- (x-rmean)^2
+    square <- (x-rmean)^2
     rvar <- rowSums(
-        sumsquare,
+        square,
         na.rm
-    ) / max(nx - 1, 1)
+    ) / pmax(nx - 1, 1)
     return(rvar)
 }
 
@@ -22,13 +24,16 @@ colVars <- function(x, na.rm=FALSE) {
         nx <- dim(x)[1]
     }
     cmean <- colMeans(x, na.rm)
-    sumsquare <- (x-cmean)^2
+    square <- (x-cmean)^2
     cvar <- colSums(
-        sumsquare,
+        square,
         na.rm
-    ) / max(nx - 1, 1)
+    ) / pmax(nx - 1, 1)
     return(cvar)
 }
+
+
+## leverage
 
 leverage <- function(x, ...) {
     UseMethod('leverge', x)
@@ -40,9 +45,9 @@ leverage.default <- function(x, na.rm=FALSE, with.attr, ...) {
 
     ## length of data
     n <- length(x)
-
-    ## sum of square sum((x - mean(x)) ^ 2)
-    ss <- var(x) * (n - 1)
+    if (n==0) {
+        stop('length should not be 0.'}
+    } else {}
 
     if (ss == 0) {
         l <- rep(1/n, n)
@@ -51,6 +56,8 @@ leverage.default <- function(x, na.rm=FALSE, with.attr, ...) {
     } else {
         m <- mean(x, na.rm=na.rm, ...)
         v <- var(x, na.rm=na.rm, ...)
+        ## sum of square sum((x - mean(x)) ^ 2)
+        ss <- v * (n - 1)
         l <- unlist(
             lapply(
                 x,
@@ -68,6 +75,42 @@ leverage.default <- function(x, na.rm=FALSE, with.attr, ...) {
     return(l)
 }
 
+
+leverage.matrix <- function(x, ...,
+                            na.rm=FALSE,
+                            with.attr=FALSE,
+                            byrow=TRUE) {
+    ## matrix leverage
+    m <- NULL
+    v <- NULL
+    n <- NULL
+    if (!byrow) {
+        x <- t(x)
+    } else {}
+
+    m <- rowMeans(x, na.rm=na.rm)
+    v <- rowVars(x, na.rm=na.rm)
+    n <- rowSums(!is.na(x))
+
+    ss <- v * (n - 1)
+
+    lss <- (x - m)^2 / ss
+
+    lss[is.nan(lss)] <- 0
+
+    l <- (1 / n) + lss
+
+    if (!byrow) {
+        l <- t(l)
+    } else {}
+    l
+}
+
+
+
+leverage.data.frame <- leverage.matrix
+
+## normalize
 
 normalize <- function(x, method='rpm', sizefactor=10^6, ...) {
     ## normalize data
@@ -88,6 +131,31 @@ predict.regsubsets <- function(object, newdata, id, ...) {
     mat[, xvars] %*% coefi
 }
 
+
+## flatten
+
+flatten <- function(x, byrow=TRUE, ..., na.rm=TRUE) {
+    UseMethod('flatten', x)
+}
+
+flatten.matrix <- function(x, byrow=TRUE, ..., na.rm=TRUE) {
+    if (!byrow) {
+        x <- t(x, ...)
+    } else {}
+
+    dim(x) <- length(x)
+
+    if (na.rm) {
+        x <- x[!is.na(x)]
+    } else {}
+
+    x
+}
+
+
+
+
+## stack
 
 unstack.data.frame <- function(x, form=formula(x), ...) {
     variables <- match.call()[-1]
