@@ -1,5 +1,3 @@
-
-
 predict.regsubsets <- function(object, newdata, id, ...) {
     ## used for regsubsets prediction
     form <- as.formula(object$call[[2]])
@@ -60,3 +58,24 @@ unstack.data.frame <- function(x, form=formula(x), ...) {
     )
     return(result)
 }
+
+
+## interval estimation (confidence interval)
+
+mean.interval <- function(data, alpha=0.05) {
+    data.mean <- mean(data)
+    data.sd <- sd(data)
+    data.df <- length(data) - 1
+    ci.lower <- data.mean + qt(p=alpha/2, df=data.df) * data.sd / sqrt(length(data))
+    ci.higher <- data.mean + qt(p=1-alpha/2, df=data.df) * data.sd / sqrt(length(data))
+    return(c('lower'=ci.lower, 'higher'=ci.higher))
+}
+
+sd.interval <- function(data, alpha=0.05) {
+    data.sd <- sd(data)
+    data.df <- length(data) - 1
+    ci.lower <- sqrt(data.df) * data.sd / sqrt(qchisq(alpha/2, df=data.df, lower.tail=F))
+    ci.higher <- sqrt(data.df) * data.sd / sqrt(qchisq(1-alpha/2, df=data.df, lower.tail=F))
+    return(c('lower'=ci.lower, 'higher'=ci.higher))
+}
+

@@ -30,10 +30,10 @@ inf.omit.data.frame <- function(object,
     is.infinitefunc[['+']] <- is.pinfinite
     is.infinitefunc[['-']] <- is.ninfinite
     col.names <- colnames(object)
-    selects <- list()
+    slcts <- list()
     for (x in col.names) {
-        selects[[x]] <- !is.infinitefunc[[direction]](object[[x]])
+        slcts[[x]] <- !is.infinitefunc[[direction]](object[[x]])
     }
-    select <- reduce(selects, function(x, y) {x & y})
-    return(object[select,])
+    slct <- Reduce( function(x, y) {x & y}, slcts)
+    return(object[slct,])
 }
